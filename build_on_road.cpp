@@ -1,57 +1,58 @@
-#include <climits>
-#include <iostream>
+#include <cstdlib>
 #include <queue>
-#include <string>
 #include <vector>
 
 using namespace std;
 
-int solution(vector<vector<int>> board) {
-  int answer = INT_MAX;
-  int N = board.size();
-  int directX[4] = {-1, 1, 0, 0};
-  int directY[4] = {0, 0, -1, 1};
-  queue<pair<pair<int, int>, pair<int, int>>> q;
+struct Car {
+  int r, c, dir, cost;
+};
 
-  q.push({{0, 0}, {4, 0}});
+int min_cost = 0x7fffffff;
+int dir_r[4] = {-1, 0, 1, 0};
+int dir_c[4] = {0, 1, 0, -1};
+
+int solution(vector<vector<int>> board) {
+  int n = board.size();
+  queue<Car> q;
+  q.push({0, 0, 5, 0});
   board[0][0] = 1;
 
   while (!q.empty()) {
-    int x = q.front().first.first;
-    int y = q.front().first.second;
-    int dir = q.front().second.first;
-    int currentCost = q.front().second.second;
-
+    Car car = q.front();
     q.pop();
 
-    if (x == N - 1 && y == N - 1) {
-      answer = answer < currentCost ? answer : currentCost;
+    int cost = car.cost;
+
+    if (car.r == n - 1 && car.c == n - 1) {
+      if (cost < min_cost)
+        min_cost = cost;
       continue;
     }
 
-    for (int j = 0; j < 4; j++) {
-      int nx = x + directX[j];
-      int ny = y + directY[j];
-      int add = 100;
+    for (int i = 0; i < 4; i++) {
+      if (abs(i - car.dir) == 2)
+        continue;
 
-      if (nx >= 0 && nx < N && ny >= 0 && ny < N && board[nx][ny] != 1) {
-        if (dir == 0 || dir == 1) {
-          if (!(j == 0 || j == 1)) {
-            add += 500;
-          }
-        } else if (dir == 2 || dir == 3) {
-          if (!(j == 2 || j == 3)) {
-            add += 500;
-          }
-        }
+      int next_r = car.r + dir_r[i];
+      int next_c = car.c + dir_c[i];
 
-        if (board[nx][ny] == 0 || board[nx][ny] >= currentCost + add) {
-          board[nx][ny] = currentCost + add;
-          q.push({{nx, ny}, {j, currentCost + add}});
+      if (next_r >= 0 && next_r < n && next_c >= 0 && next_c < n &&
+          board[next_r][next_c] != 1) {
+
+        int new_cost = cost;
+        if (i == car.dir || (car.r == 0 && car.c == 0))
+          new_cost += 100;
+        else
+          new_cost += 600;
+
+        if (board[next_r][next_c] == 0 || board[next_r][next_c] >= new_cost) {
+          q.push({next_r, next_c, i, new_cost});
+          board[next_r][next_c] = new_cost;
         }
       }
     }
   }
 
-  return answer;
+  return min_cost;
 }
