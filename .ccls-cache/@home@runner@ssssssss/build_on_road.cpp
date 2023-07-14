@@ -1,58 +1,134 @@
-#include <cstdlib>
+#include <algorithm>
+#include <iostream>
 #include <queue>
+#include <string>
 #include <vector>
-
 using namespace std;
 
-struct Car {
-  int r, c, dir, cost;
-};
+int visit[25][25];
+int n;
 
-int min_cost = 0x7fffffff;
-int dir_r[4] = {-1, 0, 1, 0};
-int dir_c[4] = {0, 1, 0, -1};
+void gostraight(int b, int sti, int stj, queue<pair<int, int>> &q,
+                queue<char> &bang) {
+  int cost = visit[sti][stj] + 500;
 
-int solution(vector<vector<int>> board) {
-  int n = board.size();
-  queue<Car> q;
-  q.push({0, 0, 5, 0});
-  board[0][0] = 1;
+  if (b > 0) {
+    int cnt = 1;
+    for (int i = sti - 1; i >= 0; i--) {
+      if (visit[i][stj] == 1)
+        break;
 
-  while (!q.empty()) {
-    Car car = q.front();
-    q.pop();
-
-    int cost = car.cost;
-
-    if (car.r == n - 1 && car.c == n - 1) {
-      if (cost < min_cost)
-        min_cost = cost;
-      continue;
+      if (visit[i][stj] > cost + cnt * 100) {
+        q.push(pair<int, int>(i, stj));
+        bang.push(-1);
+        visit[i][stj] = cost + cnt * 100;
+      }
+      cnt++;
     }
 
-    for (int i = 0; i < 4; i++) {
-      if (abs(i - car.dir) == 2)
-        continue;
+    cnt = 1;
+    for (int i = sti + 1; i < n; i++) {
+      if (visit[i][stj] == 1)
+        break;
 
-      int next_r = car.r + dir_r[i];
-      int next_c = car.c + dir_c[i];
-
-      if (next_r >= 0 && next_r < n && next_c >= 0 && next_c < n &&
-          board[next_r][next_c] != 1) {
-
-        int new_cost = cost;
-        if (i == car.dir || (car.r == 0 && car.c == 0))
-          new_cost += 100;
-        else
-          new_cost += 600;
-
-        if (board[next_r][next_c] == 0 || board[next_r][next_c] >= new_cost) {
-          q.push({next_r, next_c, i, new_cost});
-          board[next_r][next_c] = new_cost;
-        }
+      if (visit[i][stj] > cost + cnt * 100) {
+        q.push(pair<int, int>(i, stj));
+        bang.push(-2);
+        visit[i][stj] = cost + cnt * 100;
       }
+      cnt++;
+    }
+  } else {
+    int cnt = 1;
+    for (int i = stj - 1; i >= 0; i--) {
+      if (visit[sti][i] == 1)
+        break;
+
+      if (visit[sti][i] > cost + cnt * 100) {
+        q.push(pair<int, int>(sti, i));
+        bang.push(1);
+        visit[sti][i] = cost + cnt * 100;
+      }
+
+      cnt++;
+    }
+
+    cnt = 1;
+    for (int i = stj + 1; i < n; i++) {
+      if (visit[sti][i] == 1)
+        break;
+
+      if (visit[sti][i] > cost + cnt * 100) {
+        q.push(pair<int, int>(sti, i));
+        bang.push(2);
+        visit[sti][i] = cost + cnt * 100;
+      }
+
+      cnt++;
     }
   }
 
-  return min_cost;
+  return;
+}
+
+int bfs() {
+  queue<pair<int, int>> q;
+  queue<char> bang;
+
+  int sti = 0;
+  int stj = 0;
+  int b;
+  visit[0][0] = 1;
+
+  int cost = 0;
+  for (int i = 1; i < n; i++) {
+    if (visit[0][i] == 1) {
+      break;
+    }
+    visit[0][i] = i * 100;
+    q.push(pair<int, int>(0, i));
+    bang.push(2);
+  }
+
+  for (int i = 1; i < n; i++) {
+    if (visit[i][0] == 1) {
+      break;
+    }
+
+    visit[i][0] = i * 100;
+    q.push(pair<int, int>(i, 0));
+    bang.push(-2);
+  }
+
+  while (!q.empty()) {
+    sti = q.front().first;
+    stj = q.front().second;
+
+    b = bang.front();
+
+    q.pop();
+    bang.pop();
+
+    gostraight(b, sti, stj, q, bang);
+  }
+
+  return visit[n - 1][n - 1];
+}
+
+int solution(vector<vector<int>> board) {
+  int answer = 0;
+  n = board.size();
+
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      if (board[i][j] == 0)
+        visit[i][j] = 100000000;
+      else
+        visit[i][j] = board[i][j];
+    }
+  }
+
+  answer = bfs();
+
+  return answer;
 }
