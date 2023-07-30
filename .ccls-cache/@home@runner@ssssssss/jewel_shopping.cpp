@@ -18,7 +18,7 @@ vector<int> solution(vector<string> gems) {
       break;
     end++;
   }
-  Min = end - start; //구간중 가장 짧은 구간을 구해야 하므로
+  Min = end - start;
   answer[0] = start + 1;
   answer[1] = end + 1;
 
